@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Defaults
-export RESTIC_PASSWORD_FILE="/root/.resticpassword"
+export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-/root/.resticpassword}"
 EXCLUDE_FILES=("/etc/restic-backup/excludes.txt")
 
 source /etc/restic-backup/backup.conf
@@ -38,7 +38,7 @@ for vm_entry in "${VM_LIST[@]}"; do
 done
 
 # Perform the backup (combine folders + VM files)
-echo restic -r $RESTIC_REPOSITORY backup \
+restic -r $RESTIC_REPOSITORY backup \
     "${BACKUP_PATHS[@]}" \
     "${VM_BACKUP_PATHS[@]}" \
     "${IEXCLUDE_PARAMS[@]}" \
