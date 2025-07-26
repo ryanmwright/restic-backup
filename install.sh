@@ -6,6 +6,7 @@ REPO_URL="https://github.com/ryanmwright/restic-backups.git"
 INSTALL_DIR="/opt/restic-backup"
 
 if [ -d "$INSTALL_DIR/.git" ]; then
+    git -C "$INSTALL_DIR" fetch origin && git -C "$INSTALL_DIR" reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
     git -C "$INSTALL_DIR" pull
 else
     git clone "$REPO_URL" "$INSTALL_DIR"
