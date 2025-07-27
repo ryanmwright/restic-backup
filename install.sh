@@ -25,7 +25,7 @@ prompt_and_store_secret() {
 
     if [[ -f "$file" ]]; then
         echo "$file already exists."
-        read -p "Do you want to update it? [y/N] " update_choice
+        read -p "Do you want to update it? [y/N] " update_choice < /dev/tty
         if [[ ! "$update_choice" =~ ^[Yy]$ ]]; then
             echo "Skipping update of $file."
             secure_file "$file"
@@ -33,7 +33,7 @@ prompt_and_store_secret() {
         fi
     fi
 
-    read -s -p "$prompt: " secret
+    read -s -p "$prompt: " secret < /dev/tty
     echo
     echo "$secret" > "$file"
     secure_file "$file"
@@ -43,7 +43,7 @@ prompt_and_store_secret() {
 prompt_http_credentials() {
     if [[ -f "$HTTP_CREDENTIALS_FILE" ]]; then
         echo "$HTTP_CREDENTIALS_FILE already exists."
-        read -p "Do you want to update it? [y/N] " update_choice
+        read -p "Do you want to update it? [y/N] " update_choice < /dev/tty
         if [[ ! "$update_choice" =~ ^[Yy]$ ]]; then
             echo "Skipping update of $HTTP_CREDENTIALS_FILE."
             secure_file "$HTTP_CREDENTIALS_FILE"
@@ -51,8 +51,8 @@ prompt_http_credentials() {
         fi
     fi
 
-    read -p "Enter HTTP Basic Auth username: " http_user
-    read -s -p "Enter HTTP Basic Auth password: " http_pass
+    read -p "Enter HTTP Basic Auth username: " http_user < /dev/tty
+    read -s -p "Enter HTTP Basic Auth password: " http_pass < /dev/tty
     echo
     echo "${http_user}:${http_pass}" > "$HTTP_CREDENTIALS_FILE"
     secure_file "$HTTP_CREDENTIALS_FILE"
