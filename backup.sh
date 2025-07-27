@@ -21,6 +21,10 @@ for f in "${EXCLUDE_FILES[@]}"; do
   fi
 done
 
+if [[ -n "$HOST_MACHINE" ]]; then
+    RESTIC_HOSTNAME_PARAM=(--hostname "$HOST_MACHINE")
+fi
+
 source $SCRIPT_DIR/snapshot_vm.sh
 
 on_error() {
@@ -44,6 +48,7 @@ restic -r $RESTIC_REPOSITORY backup \
     "${VM_BACKUP_PATHS[@]}" \
     "${IEXCLUDE_PARAMS[@]}" \
     "${EXCLUDEFILE_PARAMS[@]}" \
+    "${RESTIC_HOSTNAME_ARG[@]}" \
     --tag auto \
     --tag "$HOST_MACHINE-current" \
     --verbose --exclude-caches --one-file-system --compression max
