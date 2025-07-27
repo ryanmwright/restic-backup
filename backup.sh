@@ -5,6 +5,7 @@ set -euo pipefail
 # Defaults
 export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-/root/.resticpassword}"
 EXCLUDE_FILES=("/etc/restic-backup/excludes.txt")
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source /etc/restic-backup/backup.conf
 
@@ -20,7 +21,7 @@ for f in "${EXCLUDE_FILES[@]}"; do
   fi
 done
 
-source ./snapshot_vm.sh
+source $SCRIPT_DIR/snapshot_vm.sh
 
 on_error() {
     echo "Error on line $1. Exit code: $2"
