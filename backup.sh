@@ -46,4 +46,6 @@ restic -r $RESTIC_REPOSITORY backup \
     "${EXCLUDEFILE_PARAMS[@]}" \
     --tag auto \
     --tag "$HOST_MACHINE-current" \
-    --verbose --exclude-caches --compression max
+    --verbose --exclude-caches --one-file-system --compression max
+
+echo "Backup completed"

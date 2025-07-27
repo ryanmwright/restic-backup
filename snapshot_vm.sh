@@ -13,6 +13,8 @@ snapshot_vm() {
     VM_NAME="$1"
     VM_HOST="$2"
 
+    echo "Snapshotting VM $VM_NAME"
+
     mkdir -p "$SNAPSHOT_PATH/$VM_NAME" "$CONFIG_XML_TARGET_PATH"
 
     VM_DISK="$DISK_PATH/$VM_NAME.qcow2"
@@ -32,6 +34,7 @@ snapshot_vm() {
 
 cleanup_vms() {
     for VM_NAME in "${!CLEANUP_PATHS[@]}"; do
+        echo "Block committing and cleaning up VM $VM_NAME"
         virsh blockcommit "$VM_NAME" vda --active --verbose --pivot
         rm -f "${CLEANUP_PATHS[$VM_NAME]}"
     done
