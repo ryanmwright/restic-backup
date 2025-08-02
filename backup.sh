@@ -3,11 +3,21 @@
 set -euo pipefail
 
 # Defaults
-export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-/root/.resticpassword}"
-EXCLUDE_FILES=("/etc/restic-backup/excludes.txt")
+JOB_NAME="${1:-${JOB_NAME:-default}}"
+export RESTIC_PASSWORD_FILE="/root/.restic_password_$JOB_NAME"
+RESTIC_HTTP_CREDENTIALS="$(cat /root/.restic_http_credentials_$JOB_NAME)"
+EXCLUDE_FILE="/etc/restic-backup/$JOB_NAME/excludes.txt"
+CONFIG_FILE="/etc/restic-backup/$JOB_NAME/backup.conf"
+
+EXCLUDE_FILES=("$EXCLUDE_FILE")
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source /etc/restic-backup/backup.conf
+if [[ -f "$CONFIG_FILE" ]]; then
+  source "$CONFIG_FILE"
+else
+  echo "Config file not found: $CONFIG_FILE" >&2
+  exit 1
+fi
 
 IEXCLUDE_PARAMS=()
 for exclude in "${BACKUP_EXCLUDES[@]}"; do
