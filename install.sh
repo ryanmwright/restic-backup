@@ -4,13 +4,29 @@ set -euo pipefail
 
 REPO_URL="https://github.com/ryanmwright/restic-backups.git"
 INSTALL_DIR="/opt/restic-backup"
-RESTIC_PASSWORD_FILE="/root/.resticpassword"
-HTTP_CREDENTIALS_FILE="/root/.restic_http_credentials"
 
 if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root!"
     exit 1
 fi
+
+get_strict_input() {
+  local prompt="$1"
+  local input
+
+  while true; do
+    read -rp "$prompt" input
+    input="${input,,}"  # Lowercase
+
+    if [[ "$input" =~ ^[a-z0-9_-]+$ ]]; then
+      break
+    else
+      echo "Input must only contain letters, numbers, underscores, or hyphens." >&2
+    fi
+  done
+
+  printf '%s' "$input"
+}
 
 secure_file() {
     local file="$1"
@@ -41,12 +57,14 @@ prompt_and_store_secret() {
 }
 
 prompt_http_credentials() {
-    if [[ -f "$HTTP_CREDENTIALS_FILE" ]]; then
-        echo "$HTTP_CREDENTIALS_FILE already exists."
+    local creds_file="$1"
+
+    if [[ -f "$creds_file" ]]; then
+        echo "$creds_file already exists."
         read -p "Do you want to update it? [y/N] " update_choice < /dev/tty
         if [[ ! "$update_choice" =~ ^[Yy]$ ]]; then
-            echo "Skipping update of $HTTP_CREDENTIALS_FILE."
-            secure_file "$HTTP_CREDENTIALS_FILE"
+            echo "Skipping update of $creds_file."
+            secure_file "$creds_file"
             return
         fi
     fi
@@ -57,6 +75,42 @@ prompt_http_credentials() {
     echo "${http_user}:${http_pass}" > "$HTTP_CREDENTIALS_FILE"
     secure_file "$HTTP_CREDENTIALS_FILE"
     echo "$HTTP_CREDENTIALS_FILE updated."
+}
+
+create_service_unit() {
+    local job_name="$1"
+    local service_name="$2"
+
+    cat <<EOF > /etc/systemd/system/$service_name
+[Unit]
+Description=Restic backup ($job_name)
+
+[Service]
+Type=oneshot
+ExecStart=/opt/restic-backup/backup.sh $job_name
+EOF
+    echo "Created systemd service: $service_name"
+}
+
+create_timer_unit() {
+    local job_name="$1"
+    local timer_name="$2"
+
+    read -rp "Enter OnCalendar value for timer (e.g. 'daily', '*-*-* 02:00:00'): " schedule
+    schedule=${schedule:-"daily"}
+
+    cat <<EOF > /etc/systemd/system/$timer_name
+[Unit]
+Description=Run Restic backup ($job_name) on schedule
+
+[Timer]
+OnCalendar=$schedule
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+    echo "Created systemd timer: $timer_name"
 }
 
 if [ -d "$INSTALL_DIR/.git" ]; then
@@ -74,14 +128,21 @@ fi
 sudo chown -R root:root "$INSTALL_DIR"
 sudo chmod +x "$INSTALL_DIR"/*.sh
 
-sudo cp "$INSTALL_DIR/restic-backup.service" /etc/systemd/system/
-sudo cp "$INSTALL_DIR/restic-backup.timer" /etc/systemd/system/
+job_name=$(get_strict_input "Enter a name for this backup job: ")
+job_name=${job_name:-"default"}
+
+service_name="restic-backup-$job_name.service"
+timer_name="restic-backup-$job_name.timer"
+password_file="/root/.restic_password_$job_name"
+
+create_service_unit "$job_name" "$service_name"
+create_timer_unit "$job_name" "$timer_name"
 sudo systemctl daemon-reload
-sudo systemctl enable --now restic-backup.timer
+sudo systemctl enable --now $timer_name
 
 echo "Configuring the Restic password and HTTP password..."
 
-prompt_and_store_secret "Enter Restic repository password" "$RESTIC_PASSWORD_FILE"
-prompt_http_credentials
+prompt_and_store_secret "Enter Restic repository password" "$password_file"
+prompt_http_credentials "/root/.restic_http_credentials_$job_name"
 
-echo "Backup scripts installed and scheduled. Make sure to put your configuration under /etc/restic-backup!"
+echo "Backup scripts installed and scheduled. Make sure to put your configuration under /etc/restic-backup/$job_name!"

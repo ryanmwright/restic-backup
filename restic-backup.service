@@ -1,7 +1,0 @@
-[Unit]
-Description=Nightly Restic Backup
-
-[Service]
-Type=oneshot
-ExecStart=/opt/restic-backup/backup.sh
-Environment=RESTIC_PASSWORD_FILE=/root/.resticpassword

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Defaults
-JOB_NAME="${1:-${JOB_NAME:-default}}"
+JOB_NAME="${1:-default}"
 export RESTIC_PASSWORD_FILE="/root/.restic_password_$JOB_NAME"
 RESTIC_HTTP_CREDENTIALS="$(cat /root/.restic_http_credentials_$JOB_NAME)"
 EXCLUDE_FILE="/etc/restic-backup/$JOB_NAME/excludes.txt"
