@@ -15,7 +15,7 @@ get_strict_input() {
   local input
 
   while true; do
-    read -rp "$prompt" input
+    read -rp "$prompt" input < /dev/tty
     input="${input,,}"  # Lowercase
 
     if [[ "$input" =~ ^[a-z0-9_-]+$ ]]; then
@@ -96,7 +96,7 @@ create_timer_unit() {
     local job_name="$1"
     local timer_name="$2"
 
-    read -rp "Enter OnCalendar value for timer (e.g. 'daily', '*-*-* 02:00:00'): " schedule
+    read -rp "Enter OnCalendar value for timer (e.g. 'daily', '*-*-* 02:00:00'): " schedule < /dev/tty
     schedule=${schedule:-"daily"}
 
     cat <<EOF > /etc/systemd/system/$timer_name
