@@ -144,5 +144,6 @@ echo "Configuring the Restic password and HTTP password..."
 
 prompt_and_store_secret "Enter Restic repository password" "$password_file"
 prompt_http_credentials "/root/.restic_http_credentials_$job_name"
+cp /opt/restic-backup/restic-env /usr/local/bin/restic-env
 
 echo "Backup scripts installed and scheduled. Make sure to put your configuration under /etc/restic-backup/$job_name!"

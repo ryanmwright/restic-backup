@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Path to secret files
+
+PROFILE_NAME="$1"
+
+for f in PROFILE_NAME; do
+    if [[ -z "${!f}" ]]; then
+        echo "Required argument missing: $f"
+        exit 1
+    fi
+done
+
+RESTIC_HTTP_CREDENTIALS="$(sudo cat /root/.restic_http_credentials_${PROFILE_NAME})"
+source "/etc/restic-backup/${PROFILE_NAME}/backup.conf"
+
+PASS="$(sudo cat /root/.restic_password_${PROFILE_NAME})"
+CMD="${2-shell}"
+
+case "$CMD" in
+  shell)
+    # Start interactive shell with these variables
+    echo "Entering Restic environment..."
+    echo "Repository: $PROFILE_NAME"
+    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --norc --noprofile
+
+    # On exit
+    echo "Exiting Restic environment."
+    ;;
+
+  mount)
+    MNT_PATH="${3-/mnt/restic}"
+    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --norc --noprofile -c "restic mount $MNT_PATH"
+    ;;
+
+#  run)
+#    shift
+#    restic "$@"
+#    cleanup
+#    ;;
+
+#  prune)
+#    restic forget --keep-last 7 --prune
+#    cleanup
+#    ;;
+
+  *)
+    echo "Usage: restic-env profile [shell|run <args>|prune]"
+    exit 1
+    ;;
+esac
