@@ -16,33 +16,26 @@ source "/etc/restic-backup/${PROFILE_NAME}/backup.conf"
 
 PASS="$(sudo cat /root/.restic_password_${PROFILE_NAME})"
 CMD="${2-shell}"
+INSTALL_PATH="/opt/restic-backup"
+RCFILE_PATH="$INSTALL_PATH/restic_functions.sh"
 
 case "$CMD" in
   shell)
-    # Start interactive shell with these variables
     echo "Entering Restic environment..."
     echo "Repository: $(echo "$RESTIC_REPOSITORY" | sed -E 's#(https?://[^:@]+):[^@]+@#\1:*****@#')"
-    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --norc --noprofile
-
-    # On exit
+    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --noprofile --rcfile $RCFILE_PATH -i
     echo "Exiting Restic environment."
     ;;
 
   mount)
     MNT_PATH="${3-/mnt/restic}"
-    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --norc --noprofile -c "restic mount $MNT_PATH"
+    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --noprofile -c "source $RCFILE_PATH; restic-mount $MNT_PATH"
     ;;
 
-#  run)
-#    shift
-#    restic "$@"
-#    cleanup
-#    ;;
-
-#  prune)
-#    restic forget --keep-last 7 --prune
-#    cleanup
-#    ;;
+  snapshots)
+    ARGS="${@:3}"
+    env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --noprofile -c "source $RCFILE_PATH; restic-snapshots $ARGS"
+    ;;
 
   *)
     echo "Usage: restic-env profile [shell|run <args>|prune]"
