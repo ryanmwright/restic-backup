@@ -21,7 +21,7 @@ case "$CMD" in
   shell)
     # Start interactive shell with these variables
     echo "Entering Restic environment..."
-    echo "Repository: $PROFILE_NAME"
+    echo "Repository: $(echo "$RESTIC_REPOSITORY" | sed -E 's#(https?://[^:@]+):[^@]+@#\1:*****@#')"
     env RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_PASSWORD="$PASS" bash --norc --noprofile
 
     # On exit
