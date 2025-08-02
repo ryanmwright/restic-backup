@@ -72,9 +72,9 @@ prompt_http_credentials() {
     read -p "Enter HTTP Basic Auth username: " http_user < /dev/tty
     read -s -p "Enter HTTP Basic Auth password: " http_pass < /dev/tty
     echo
-    echo "${http_user}:${http_pass}" > "$HTTP_CREDENTIALS_FILE"
-    secure_file "$HTTP_CREDENTIALS_FILE"
-    echo "$HTTP_CREDENTIALS_FILE updated."
+    echo "${http_user}:${http_pass}" > "$creds_file"
+    secure_file "$creds_file"
+    echo "$creds_file updated."
 }
 
 create_service_unit() {
